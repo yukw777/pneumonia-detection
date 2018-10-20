@@ -9,7 +9,12 @@ import math
 import random
 import argparse
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
+from PIL import Image
+
+from utils import read_label_file
+from object_detection.utils import visualization_utils as visutil
 
 
 def sample(probs):
@@ -166,37 +171,67 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('cfg')
-    parser.add_argument('weight')
+    parser.add_argument('config_file')
+    parser.add_argument('weight_file')
     parser.add_argument('data_file')
-    parser.add_argument('test_images')
+    parser.add_argument('test_images_file')
     parser.add_argument('submission_file')
+    parser.add_argument('images_out_dir')
+    parser.add_argument('--label-file')
     parser.add_argument('-g', '--gpu-index', type=int, default=0)
     parser.add_argument('-t', '--threshold', type=float, default=0.2)
     args = parser.parse_args()
 
-    net = load_net(args.cfg.encode(), args.weight.encode(), args.gpu_index)
+    if not os.path.exists(args.images_out_dir):
+        os.mkdir(args.images_out_dir)
+
+    labels = None
+    if args.label_file:
+        labels = read_label_file(args.label_file)
+
+    net = load_net(args.config_file.encode(), args.weight_file.encode(), args.gpu_index)
     meta = load_meta(args.data_file.encode())
 
     submit_dict = {'patientId': [], 'PredictionString': []}
 
-    with open(args.test_images, 'r') as test_images_file:
+    with open(args.test_images_file, 'r') as test_images_file:
         for line in tqdm(test_images_file):
             patient_id = os.path.split(line.strip())[1].split('.')[0]
+
+            # read the image
+            im = np.array(Image.open(line.strip()))
 
             infer_result = detect(
                 net, meta, line.strip().encode(), thresh=args.threshold)
 
             boxes = []
+            display_boxes = []
+            display_scores = []
             for e in infer_result:
                 confidence = e[1]
+                display_scores.append(confidence)
                 w = e[2][2]
                 h = e[2][3]
                 x = e[2][0]-w/2
                 y = e[2][1]-h/2
+                display_boxes.append([y, x, y + h, x + w])
                 boxes.append('{0} {1} {2} {3} {4}'.format(confidence, x, y, w, h))
 
             submit_dict['patientId'].append(patient_id)
             submit_dict['PredictionString'].append(' '.join(boxes))
+
+            if infer_result:
+                visutil.visualize_boxes_and_labels_on_image_array(
+                    im,
+                    np.array(display_boxes),
+                    [1] * len(display_boxes),
+                    display_scores,
+                    {1: {'id': 1, 'name': 'pneumonia'}},
+                    use_normalized_coordinates=False,
+                    max_boxes_to_draw=3,
+                    min_score_thresh=args.threshold,
+                )
+            im = Image.fromarray(im)
+            im.save(os.path.join(args.images_out_dir, patient_id + '.jpg'))
 
     pd.DataFrame(submit_dict).to_csv(args.submission_file, index=False)
