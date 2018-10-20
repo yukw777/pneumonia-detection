@@ -26,13 +26,13 @@ python darknet/generate_darknet_labels.py <labels.csv> /dir/to/save/labels/files
 ```
 
 ### Step 4: Create config files
-Darknet requires three config files to train. Samples we used are in this repo. Please see the Darknet official website for more details.
+Darknet requires three config files to train. Samples we used are in this repo. Please see the [Darknet official website](https://pjreddie.com/darknet/yolo/) for more details.
 1. [data file](cfg/yolov3.data)
 1. [name file](cfg/yolov3.names)
 1. config file: [train](cfg/yolov3-train.cfg), [test](cfg/yolov3-test.cfg)
 
 ### Step 5: Train!
-You must have the darknet binary compiled. Please see the official website for instructions. In order to speed up the training, we used the pretrained model from the official Darknet website.
+You must have the darknet binary compiled. Please see the official website for [instructions](https://pjreddie.com/darknet/install/). In order to speed up the training, we used the [pretrained model](https://pjreddie.com/media/files/darknet53.conv.74) from the official Darknet website.
 ```bash
 # single gpu
 ./darknet detector cfg/yolov3.data cfg/yolov3-train.cfg /path/to/pretrained | tee train.log
@@ -41,15 +41,18 @@ You must have the darknet binary compiled. Please see the official website for i
 ./darknet detector cfg/yolov3.data cfg/yolov3-train.cfg /path/to/pretrained -gpus 0,1,2,3 | tee train.log
 ```
 
-## How to
-## How to test
-Use `darknet_test.py` to test the model. It requires `libdarknet.so` which is generated when you compile the Darknet binary.
+## How to evaluate and test
+Use `darknet_test.py` to evaluate and test the model. It requires `libdarknet.so` which is generated when you compile the Darknet binary.
 ```bash
 # convert test DICOMs to JPGs
 mogrify -format jpg -type TrueColor -path /dir/to/save/jpgs /path/to/test/dicoms
 
 # generate a test data file
 find /dir/to/save/jpgs | grep jpg > test.txt
+
+# evaluate. produces a set of images with
+# top 3 detected boxes and groundtruth boxes
+python darknet_test.py cfg/yolov3-test.cfg <weight_file> cfg/yolov3.data test.txt <submission.csv> -t 0.01 --label-file <label-file.csv>
 
 # test
 python darknet_test.py cfg/yolov3-test.cfg <weight_file> cfg/yolov3.data test.txt <submission.csv> -t 0.1
