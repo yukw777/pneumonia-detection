@@ -1,0 +1,5 @@
+classes=1
+train = darknet/train.txt
+valid = darknet/valid.txt
+names = darknet/cfg/yolov3.names
+backup = darknet/models/yolov3
