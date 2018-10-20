@@ -231,6 +231,15 @@ if __name__ == "__main__":
                     max_boxes_to_draw=3,
                     min_score_thresh=args.threshold,
                 )
+            if labels:
+                visutil.visualize_boxes_and_labels_on_image_array(
+                    im,
+                    labels[patient_id]['boxes'],
+                    [labels[patient_id]['label']] * len(labels[patient_id]['boxes']),
+                    None,
+                    {1: {'id': 1, 'name': 'pneumonia'}},
+                    use_normalized_coordinates=False,
+                )
             im = Image.fromarray(im)
             im.save(os.path.join(args.images_out_dir, patient_id + '.jpg'))
 
