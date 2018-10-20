@@ -8,3 +8,7 @@ pandas==0.23.4
 pydicom==1.2.0
 tensorflow-gpu==1.11.0
 tqdm==4.27.0
+Keras==2.2.4
+scikit-image==0.14.1
+imgaug==0.2.6
+opencv-python==3.4.3.18
