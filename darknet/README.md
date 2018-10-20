@@ -39,6 +39,9 @@ You must have the darknet binary compiled. Please see the official website for [
 
 # multi gpu
 ./darknet detector cfg/yolov3.data cfg/yolov3-train.cfg /path/to/pretrained -gpus 0,1,2,3 | tee train.log
+
+# loss plot
+python loss_plot.py train.log
 ```
 
 ## How to evaluate and test
