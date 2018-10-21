@@ -2,8 +2,14 @@
 Ensembling methods for object detection.
 """
 import argparse
+import os
 import pandas as pd
+import numpy as np
+import pydicom
+import PIL.Image as Image
 
+from tqdm import tqdm
+from object_detection.utils import visualization_utils as visutil
 from collections import OrderedDict
 from calculate_map import parse_submission, calculate_iou
 
@@ -122,6 +128,8 @@ def ensemble(dets, conf_thresh=0.5, iou_thresh=0.1, weights=None):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('dicom_dir', help='path to the directory with DICOM images')
+    parser.add_argument('out_images_dir', help='path to the directory for the output images')
     parser.add_argument('ensembled_submission', help='ensembled submission file')
     parser.add_argument('submissions', nargs='+', help='subsmission files to ensemble')
     parser.add_argument('--weights', nargs='+', type=float, help='weight for each submission', default=None)
@@ -133,11 +141,14 @@ if __name__=="__main__":
         print('no submissions')
         exit()
 
+    if not os.path.exists(args.out_images_dir):
+        os.mkdir(args.out_images_dir)
+
     submissions = OrderedDict([(s, parse_submission(s)) for s in args.submissions])
     patient_ids = list(submissions[args.submissions[0]].keys())
 
     submit_dict = {'patientId': [], 'PredictionString': []}
-    for pid in patient_ids:
+    for pid in tqdm(patient_ids):
         dets = []
         for _, parsed in submissions.items():
             sub_dets = []
@@ -146,10 +157,31 @@ if __name__=="__main__":
             dets.append(sub_dets)
         ensembled = ensemble(dets, conf_thresh=args.conf_thresh, iou_thresh=args.iou_thresh, weights=args.weights)
         print_boxes = []
+        display_boxes = []
+        display_classes = []
+        display_scores = []
         for e in ensembled:
-            x, y, w, h, _, conf = e
+            x, y, w, h, c, conf = e
             print_boxes.append('{0} {1} {2} {3} {4}'.format(conf, x, y, w, h))
+            display_boxes.append([y, x, y + h, x + w])
+            display_classes.append(c)
+            display_scores.append(conf)
         submit_dict['patientId'].append(pid)
         submit_dict['PredictionString'].append(' '.join(print_boxes))
+
+        im = pydicom.read_file(os.path.join(args.dicom_dir, pid + '.dcm'))
+        im = im.pixel_array
+        im = np.stack((im, ) * 3, -1)
+        if display_boxes:
+            visutil.visualize_boxes_and_labels_on_image_array(
+                im,
+                np.array(display_boxes),
+                display_classes,
+                display_scores,
+                {1: {'id': 1, 'name': 'pneumonia'}},
+                use_normalized_coordinates=False,
+                min_score_thresh=args.conf_thresh,
+            )
+        Image.fromarray(im).save(os.path.join(args.out_images_dir, pid + '.jpg'))
 
     pd.DataFrame(submit_dict).to_csv(args.ensembled_submission, index=False)
