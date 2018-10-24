@@ -58,5 +58,6 @@ find /dir/to/save/jpgs | grep jpg > test.txt
 python darknet_test.py cfg/yolov3-test.cfg <weight_file> cfg/yolov3.data test.txt <submission.csv> -t 0.01 --label-file <label-file.csv>
 
 # test
-python darknet_test.py cfg/yolov3-test.cfg <weight_file> cfg/yolov3.data test.txt <submission.csv> -t 0.1
+# this is what we used for our submission
+python darknet_test.py cfg/yolov3-test.cfg <weight_file> cfg/yolov3.data test.txt <submission.csv> -t 0.03
 ```

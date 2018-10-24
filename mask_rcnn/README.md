@@ -28,9 +28,17 @@ python eval.py \
     --pick-500
 
 # test
+# this is what we used for our submission
 python eval.py \
     models/resnet50/config.ini \
-    0.1 \
+    0.95 \
+    /path/to/dicom/images \
+    /path/to/trained/model \
+    /path/to/output/dir \
+    --submission-file /path/to/submission/file
+python eval.py \
+    models/resnet101/config.ini \
+    0.98 \
     /path/to/dicom/images \
     /path/to/trained/model \
     /path/to/output/dir \

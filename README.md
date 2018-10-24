@@ -22,5 +22,18 @@ Please see [darknet](darknet), [tensorflow](tensorflow) and [mask_rcnn](mask_rcn
 Use `ensemble.py` to combine the results.
 ```bash
 # this is what we used for the final submission
+# First generate 7 submission files for all the models
+# then run the following to generate an ensembled submission file
 python ensemble.py
+    <ensembled.csv> \
+    <faster_rcnn_resnet101 submission> \
+    <faster_rcnn_resnet50 submission> \
+    <faster_rcnn_inception v2 submission> \
+    <mask_rcnn_resnet101 submission> \
+    <mask_rcnn_resnet50 submission> \
+    <ssd_mobilenet_v2 submission> \
+    <darknet_yolov3 submission> \
+    --iou-thresh 0.01 \
+    --conf-thresh 0.4 \
+    --weights 0.204 0.18 0.168 0.16 0.145 0.12 0.136
 ```
