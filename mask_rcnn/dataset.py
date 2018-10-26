@@ -71,7 +71,7 @@ class DetectorDataset(utils.Dataset):
         return mask.astype(np.bool), class_ids.astype(np.int32)
 
 
-def get_train_and_val(dicom_dir, label_file, split=0.2, shuffle=True):
+def get_train_and_val(dicom_dir, label_file, split=0.04, shuffle=True):
     anns = pd.read_csv(label_file)
     image_fps, image_annotations = parse_dataset(dicom_dir, anns)
 
