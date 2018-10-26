@@ -28,25 +28,7 @@ if __name__ == '__main__':
         model.load_weights(args.checkpoint)
 
     # Image augmentation
-    augmentation = iaa.Sequential([
-        iaa.OneOf([ ## geometric transform
-            iaa.Affine(
-                scale={"x": (0.98, 1.02), "y": (0.98, 1.04)},
-                translate_percent={"x": (-0.02, 0.02), "y": (-0.04, 0.04)},
-                rotate=(-2, 2),
-                shear=(-1, 1),
-            ),
-            iaa.PiecewiseAffine(scale=(0.001, 0.025)),
-        ]),
-        iaa.OneOf([ ## brightness or contrast
-            iaa.Multiply((0.9, 1.1)),
-            iaa.ContrastNormalization((0.9, 1.1)),
-        ]),
-        iaa.OneOf([ ## blur or sharpen
-            iaa.GaussianBlur(sigma=(0.0, 0.1)),
-            iaa.Sharpen(alpha=(0.0, 0.1)),
-        ]),
-    ])
+    augmentation = iaa.Fliplr(0.5)
 
     # train and validation sets
     dataset_train, dataset_val = get_train_and_val(args.dicom_dir, args.label_file)
